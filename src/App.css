@@ -6,7 +6,7 @@ html, body, #root, #root>div {
 
 .info-box {
     min-width: auto;
-    margin: 0 2em;
+    margin: 0 1em;
 }
 
 /* phone view */
