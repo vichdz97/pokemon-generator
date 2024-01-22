@@ -7,7 +7,7 @@ interface Props {
 function Heading({ children }: Props) {
     return (
         <h1 className='text-dark'>
-            <img src='src/assets/pokeball.png' width='50' className='mb-1 mx-1' />
+            <img src='pokeball.png' width='50' className='mb-1 mx-1' />
             {children}
         </h1>
     )
