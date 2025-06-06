@@ -1,31 +1,56 @@
-html, body, #root, #root>div {
-    height: 100%;
+* {
     margin: 0;
+    padding: 0;
+}
+
+html, body, #root, #root>div {
+    min-height: 100vh;
     background: linear-gradient(white, lightblue, cornflowerblue);
 }
 
-.info-box {
-    min-width: auto;
-    margin: 0 1em;
+/* Stats are bolded */
+div > p:first-child {
+    font-weight: bold;
 }
 
-/* phone view */
-@media screen and (min-width: 560px) {
-    .info-box {
-        width: 60%;
-    }
+.sprite-btn {
+    border: none;
+    background-color: transparent;
+    transition: ease-in-out 0.2s;
 }
 
-/* tablet view */
+.sprite-btn:hover {
+    transform: scale(1.25);
+}
+
+/* TABLET */
 @media screen and (min-width: 760px) {
-    .info-box {
-        width: 50%;
+    #root {
+        width: 95%;
+        margin: auto;
     }
 }
 
-/* laptop view */
-@media screen and (min-width: 960px) {
-    .info-box {
-        width: 40%;
+/* DESKTOP */
+@media screen and (min-width: 1024px) {
+    #root {
+        width: 70%;
+        margin: auto;
+    }
+}
+
+/* DESKTOP L */
+@media screen and (min-width: 1440px) {
+    #root {
+        width: 50%;
+        margin: auto;
+    }
+}
+
+/* DESKTOP 4K  */
+@media screen and (min-width: 2560px) {
+    #root {
+        width: 30%;
+        margin: auto;
     }
 }
