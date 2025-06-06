@@ -1,214 +1,191 @@
 import './App.css'
 import { useState } from 'react'
 import axios from 'axios'
-import clickSfx from './assets/click.mp3';
+import { Pokemon, REGIONS, TYPE_COLORS, STATBAR_COLORS, FIXED_NAMES } from './PokemonData';
+import StatRows from './StatRows';
 
-import Button from './components/Button';
-import Info from './components/Info';
-import Name from './components/Name';
-import Image from './components/Image';
-import Type from './components/Type';
-import Input from './components/Input';
-import Heading from './components/Heading';
-import ErrorMessage from './components/ErrorMessage';
-import Stats from './components/Stats';
-import Region from './components/Region';
+const BASE_URL = "https://pokeapi.co/api/v2/pokemon";
+const GEN_LIMIT = 1025;
 
 function App() {
-    const URL = "https://pokeapi.co/api/v2/pokemon/";
-    const GEN_LIMIT = 1025;
-    const [ randomNum, setRandomNum ] = useState(Math.floor(Math.random() * GEN_LIMIT + 1));
-    
-    const [ audio ] = useState(new Audio(clickSfx));
-    const playSound = () => audio.play();
+    const [ pokemon, setPokemon ] = useState<Pokemon | null>(null);
+    const [ searchInput, setSearchInput ] = useState('');
+    const [ error, setError] = useState(false);
+    const [ displaySprite, setDisplaySprite ] = useState('');
+    const [ isLoading, setIsLoading ] = useState(false);
 
-    const [ region, setRegion ] = useState('');
-    const [ pokemonID, setPokemonID ] = useState(0);
-    const [ pokemonName, setPokemonName ] = useState('');
-    const [ pokemonSprite, setPokemonSprite ] = useState('');
-    const [ pokemonShiny, setPokemonShiny] = useState('');
-    const [ pokemonType, setPokemonType ] = useState('');
-    const [ pokemonType2, setPokemonType2 ] = useState('');
+    const getRegion = (id: number): string => {
+        const region = REGIONS.find(choice => id >= choice.min);
+        return region ? region.name : 'Undiscovered';
+    }
 
-    const [ hp, setHP ] = useState('');
-    const [ attack, setAttack ] = useState('');
-    const [ defense, setDefense ] = useState('');
-    const [ spAttack, setSpAttack ] = useState('');
-    const [ spDefense, setSpDefense ] = useState('');
-    const [ speed, setSpeed ] = useState('');
+    const getTypeColors = (types: string[]): string[] => {
+        return types.map(type => TYPE_COLORS[type] || 'lightgray');
+    }
 
-    const [ bgColor, setBgColor ] = useState('');
-    const [ bgColor2, setBgColor2 ] = useState('');
+    const getStatbarColor = (value: number): string => {
+        const found = STATBAR_COLORS.find((choice) => value >= choice.min);
+        return found ? found.color : 'rgb(0, 0, 0)';
+    }
 
-    const [ pokemonInput, setPokemonInput ] = useState('');
-    const [ showErrorMsg, setShowErrorMsg] = useState(false);
-
-    const capitalizeString = (str: string) => {
+    const capitalize = (str: string): string => {
         return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
-    const getPokemon = () => {
-        showErrorMsg ? setShowErrorMsg(false) : showErrorMsg;
-        setPokemonInput('');
-        if (pokemonType2)
-            setPokemonType2('');
+    const prettifyString = (str: string, region?: string): string => {
+        if (FIXED_NAMES[str]) return FIXED_NAMES[str];
 
-        setRandomNum(Math.floor(Math.random() * GEN_LIMIT + 1));
-        axios.get(URL + randomNum.toString())
-            .then(response => {
-                setPokemonID(response.data.id);
-                setPokemonName(capitalizeString(response.data.name));
-                setPokemonSprite(response.data.sprites.front_default);
-                setPokemonShiny(response.data.sprites.front_shiny);
-                setPokemonType(response.data.types[0].type.name);
-                if (response.data.types[1])
-                    setPokemonType2(response.data.types[1].type.name)
-
-                setHP(response.data.stats[0].base_stat);
-                setAttack(response.data.stats[1].base_stat);
-                setDefense(response.data.stats[2].base_stat);
-                setSpAttack(response.data.stats[3].base_stat);
-                setSpDefense(response.data.stats[4].base_stat);
-                setSpeed(response.data.stats[5].base_stat);
-
-                playSound();
-            })
-            .catch(err => {
-                console.error(err);
-            });
-    }
-
-    const getPokemonByName = (name: string) => {
-        if (name == '') return;
-        if (pokemonType2)
-            setPokemonType2('');
-
-        axios.get(URL + name.toLowerCase())
-            .then(response => {
-                setPokemonID(response.data.id);
-                setPokemonName(capitalizeString(response.data.name));
-                setPokemonSprite(response.data.sprites.front_default);
-                setPokemonShiny(response.data.sprites.front_shiny);
-                setPokemonType(response.data.types[0].type.name);
-                if (response.data.types[1])
-                    setPokemonType2(response.data.types[1].type.name)
-
-                setHP(response.data.stats[0].base_stat);
-                setAttack(response.data.stats[1].base_stat);
-                setDefense(response.data.stats[2].base_stat);
-                setSpAttack(response.data.stats[3].base_stat);
-                setSpDefense(response.data.stats[4].base_stat);
-                setSpeed(response.data.stats[5].base_stat);
-
-                setPokemonInput('');
-
-                playSound();
-            })
-            .catch(() => {
-                setPokemonInput('');
-                setShowErrorMsg(true);
-                setPokemonName('');
-            });
-    }
-
-    const getGeneration = (id: number) => {
-        if (id >= 906) setRegion('Paldea (Gen IX)');
-        else if (id >= 899) setRegion('Hisui (Gen VIII)');
-        else if (id >= 810) setRegion('Galar (Gen VIII)');
-        else if (id >= 722) setRegion('Alola (Gen VII)');
-        else if (id >= 650) setRegion('Kalos (Gen VI)');
-        else if (id >= 494) setRegion('Unova (Gen V)');
-        else if (id >= 387) setRegion('Sinnoh (Gen IV)');
-        else if (id >= 252) setRegion('Hoenn (Gen III)');
-        else if (id >= 152) setRegion('Johto (Gen II)');
-        else if (id > 0) setRegion('Kanto (Gen I)');
-        else setRegion('Undiscovered');
-    }
-
-    const setColors = (type: string, type2?:string) => {
-        switch (type) {
-            case 'normal': setBgColor('#A8A77A'); break;
-            case 'grass': setBgColor('#7AC74C'); break;
-            case 'water': setBgColor('#6390F0'); break;
-            case 'fire': setBgColor('#EE8130'); break;
-            case 'electric': setBgColor('#F7D02C'); break;
-            case 'ice': setBgColor('#96D9D6'); break;
-            case 'fighting': setBgColor('#C22E28'); break;
-            case 'poison': setBgColor('#A33EA1'); break;
-            case 'ground': setBgColor('#E2BF65'); break;
-            case 'flying': setBgColor('#A98FF3'); break;
-            case 'psychic': setBgColor('#F95587'); break;
-            case 'bug': setBgColor('#A6B91A'); break;
-            case 'rock': setBgColor('#B6A136'); break;
-            case 'ghost': setBgColor('#735797'); break;
-            case 'dragon': setBgColor('#6F35FC'); break;
-            case 'dark': setBgColor('#705746'); break;
-            case 'steel': setBgColor('#B7B7CE'); break;
-            case 'fairy': setBgColor('#D685AD'); break;
-            default: setBgColor('lightgray');
+        if (str.includes('tapu') || (region?.includes('Paldea') && !str.includes('gourgeist') && !str.includes('therian'))) {
+            const [first, last] = str.split('-');
+            return `${capitalize(first)} ${capitalize(last)}`;
         }
 
-        if (type2) {
-            switch (type2) {
-                case 'normal': setBgColor2('#A8A77A'); break;
-                case 'grass': setBgColor2('#7AC74C'); break;
-                case 'water': setBgColor2('#6390F0'); break;
-                case 'fire': setBgColor2('#EE8130'); break;
-                case 'electric': setBgColor2('#F7D02C'); break;
-                case 'ice': setBgColor2('#96D9D6'); break;
-                case 'fighting': setBgColor2('#C22E28'); break;
-                case 'poison': setBgColor2('#A33EA1'); break;
-                case 'ground': setBgColor2('#E2BF65'); break;
-                case 'flying': setBgColor2('#A98FF3'); break;
-                case 'psychic': setBgColor2('#F95587'); break;
-                case 'bug': setBgColor2('#A6B91A'); break;
-                case 'rock': setBgColor2('#B6A136'); break;
-                case 'ghost': setBgColor2('#735797'); break;
-                case 'dragon': setBgColor2('#6F35FC'); break;
-                case 'dark': setBgColor2('#705746'); break;
-                case 'steel': setBgColor2('#B7B7CE'); break;
-                case 'fairy': setBgColor2('#D685AD'); break;
-                default: setBgColor2('lightgray');
-            }
+        if (str.includes('-')) {
+            const [first, ...rest] = str.split('-');
+            if (rest.includes('incarnate') || rest.includes('therian')) rest.push('form');
+            return `${capitalize(first)} (${rest.map(word => capitalize(word)).join(' ')})`;
         }
+
+        return capitalize(str);
+    }
+
+    // TODO: convert ogg to mp3 -> https://cloudconvert.com/api/v2#overview
+    const playSound = (src: string): void => { 
+        const audio = new Audio(src);
+        audio.volume = 0.1;
+        audio.play();
+    };
+
+    const storePokemonData = (data: any) => {
+        const types = data.types.map((typeData: any) => typeData.type.name);
+        const newPokemon: Pokemon = {
+            id: data.id,
+            name: prettifyString(data.name, getRegion(data.id)),
+            sprite: data.sprites.front_default,
+            spriteGif: data.sprites.other.showdown.front_default,
+            shinySprite: data.sprites.front_shiny,
+            shinyGif: data.sprites.other.showdown.front_shiny,
+            types: types,
+            stats: {
+                hp: data.stats[0].base_stat,
+                attack: data.stats[1].base_stat,
+                defense: data.stats[2].base_stat,
+                spAttack: data.stats[3].base_stat,
+                spDefense: data.stats[4].base_stat,
+                speed: data.stats[5].base_stat
+            },
+            region: getRegion(data.id),
+            typeColors: getTypeColors(types)
+        };
+
+        setPokemon(newPokemon);
+    };
+
+    const getPokemon = (name: string) => {
+        setSearchInput('');
+        setError(false);
+        setPokemon(null);
+        setIsLoading(true);
+        
+        const randomNum = Math.floor(Math.random() * GEN_LIMIT + 1);
+        const nameInAPI = name.toLowerCase().replace(/\s/g, '-').replace(/[\.]/g, '');
+        const URL = `${BASE_URL}/${name.trim() === '' ? randomNum : nameInAPI}`;
+
+        axios.get(URL)
+            .then(response => {
+                storePokemonData(response.data);
+                setDisplaySprite(response.data.sprites.other.showdown.front_default || response.data.sprites.front_default );
+                playSound(response.data.cries.latest);
+            })
+            .catch(() => setError(true))
+            .finally(() => setIsLoading(false));
     }
 
     return (
-        <div className='d-flex flex-column justify-content-center align-items-center'>
-            <div className='my-4 d-flex flex-column align-items-center'>
-                <Heading>Pok&eacute;mon Generator</Heading>
-                <div className="input-group">
-                    <Input value={pokemonInput} 
-                        onChange={input => {
-                            setPokemonInput(input.target.value);
-                            showErrorMsg ? setShowErrorMsg(false) : showErrorMsg;
-                        }} />
-                    <Button color='secondary' onClick={() => getPokemonByName(pokemonInput)}>Search</Button>
+        <div>
+            <div className='w-75 mx-auto my-4'>
+                <div className='d-flex flex-column align-items-center'>
+                    <div className='d-flex align-items-center'>
+                        <img src="pokeball.png" alt="pok&eacute;ball" width={45} />
+                        <h2 className='m-0'>Pok&eacute;mon Generator</h2>
+                    </div>
+                    <div className='d-flex flex-column align-items-center'>
+                        <p className='m-0 fw-normal text-center'>Enter any Pok&eacute;mon name or ID below to generate their stats!</p>
+                        <p className='m-0 fw-bold'>OR</p>
+                        <p className='m-0 text-center'>Just click on the generate button for a random Pok&eacute;mon!</p>
+                    </div>
                 </div>
-                <ErrorMessage hidden={!showErrorMsg}>Please enter a valid Pok&eacute;mon name</ErrorMessage>
-                <span className='my-2'>- or -</span>
-                <Button color='primary' onClick={getPokemon}>Generate</Button>
+                <div className='input-group my-4'>
+                    <input 
+                        type="text"
+                        className='form-control'
+                        placeholder='Search Pok&eacute;mon'
+                        value={searchInput}
+                        onChange={e => {
+                            setSearchInput(e.target.value);
+                            setError(false);
+                        }}
+                        onKeyDown={(e) => e.key === 'Enter' && getPokemon(searchInput)}
+                    />
+                    <button className='btn btn-primary' onClick={() => getPokemon(searchInput)}>Generate</button>
+                </div>
+                <p className='text-danger text-center' hidden={!error}>Error loading Pok&eacute;mon</p>
             </div>
+                    
+            { pokemon ? (
+                <div className='d-sm-flex justify-content-center m-4 p-4 bg-light rounded shadow'>
+                    {/* POKEMON SPRITE */}
+                    <div className='flex-fill d-flex flex-column align-items-center justify-content-center'>
+                        <div className='flex-fill d-flex flex-column align-items-center justify-content-evenly gap-4'>
+                            <img 
+                                src={displaySprite} 
+                                alt={`${pokemon.name} ${displaySprite === pokemon.shinySprite ? 'shiny sprite' : 'sprite'}`} 
+                                width={'70%'}
+                                className='m-0 p-0'
+                            />
+                            <div className='d-flex align-items-center justify-content-center gap-2'>
+                                <button className='sprite-btn' onClick={() => setDisplaySprite(pokemon.spriteGif || pokemon.sprite)}>
+                                    <img src={pokemon.sprite} alt={`${pokemon.name} sprite`} />
+                                </button>
+                                <button className='sprite-btn' onClick={() => setDisplaySprite(pokemon.shinyGif || pokemon.shinySprite)}>
+                                    <img src={pokemon.shinySprite} alt={`${pokemon.name} shiny sprite`} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-            { pokemonName ? 
-                <Info onLoad={() => {
-                    pokemonType2 ? setColors(pokemonType, pokemonType2) : setColors(pokemonType);
-                    getGeneration(pokemonID);
-                }}>
-                    <Name name={pokemonName} />
-                    <Region region={region}/>
-                    <div className='flex-row'>
-                        <Image sprite={pokemonSprite} />
-                        <Image sprite={pokemonShiny} />
+                    {/* POKEMON INFO */}
+                    <div className='flex-fill d-flex align-items-center justify-content-center justify-content-sm-start'>
+                        <div className='d-flex flex-column' style={{minWidth: '100%', width: '75%', maxWidth: '75%'}}>
+                            {/* ID */}
+                            <h6 className='text-center text-secondary fw-light m-0'>#{pokemon.id.toString().padStart(3, '0')}</h6>
+
+                            {/* NAME */}
+                            <h3 className='text-center m-0'>{pokemon.name}</h3>
+
+                            {/* REGION */}
+                            <h6 className='text-center text-secondary fst-italic fw-light m-0'>{pokemon.region}</h6>
+
+                            {/* TYPES */}
+                            <div className='d-flex justify-content-center gap-2 p-4 text-light'>
+                                <div className='text-center rounded p-1' style={{backgroundColor: pokemon.typeColors[0], width: 100}}>{prettifyString(pokemon.types[0])}</div>
+                                { pokemon.typeColors.length === 2 && <div className='text-center rounded p-1' style={{backgroundColor: pokemon.typeColors[1], width: 100}}>{prettifyString(pokemon.types[1])}</div> }
+                            </div>
+
+                            {/* STATS */}
+                            <div className='flex-fill d-flex flex-column align-items-center justify-content-center'>
+                                <h3 className='text-decoration-underline'>Pok&eacute;mon Stats</h3>
+                                <StatRows pokemon={pokemon} getStatbarColor={getStatbarColor} />
+                            </div>
+                        </div>
                     </div>
-                    <div className="d-flex flex-row">
-                        <Type backgroundColor={bgColor}>{capitalizeString(pokemonType)}</Type>
-                        {pokemonType2 ? <Type backgroundColor={bgColor2}>{capitalizeString(pokemonType2)}</Type> : null}
-                    </div>
-                    <Stats hp={hp} attack={attack} defense={defense} spAttack={spAttack} spDefense={spDefense} speed={speed} />
-                </Info> 
-                : null 
-            }
+                </div>
+            ) : (
+                <div className='d-flex flex-column gap-4 align-items-center justify-content-center text-light' style={{height: '50vh'}}>
+                    <div className="spinner-border" role="status" hidden={!isLoading}></div>
+                    <h3 hidden={!isLoading}>Searching...</h3>
+                </div>
+            )}
         </div>
     )
 }
