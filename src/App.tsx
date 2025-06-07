@@ -13,6 +13,7 @@ function App() {
     const [ error, setError] = useState(false);
     const [ displaySprite, setDisplaySprite ] = useState('');
     const [ isLoading, setIsLoading ] = useState(false);
+    const [ showInstructions, setShowInstructions ] = useState(true);
 
     const getRegion = (id: number): string => {
         const region = REGIONS.find(choice => id >= choice.min);
@@ -93,6 +94,7 @@ function App() {
 
         axios.get(URL)
             .then(response => {
+                setShowInstructions(false);
                 storePokemonData(response.data);
                 setDisplaySprite(response.data.sprites.other.showdown.front_default || response.data.sprites.front_default );
                 playSound(response.data.cries.latest);
@@ -104,18 +106,11 @@ function App() {
     return (
         <div>
             <div className='w-75 mx-auto my-4'>
-                <div className='d-flex flex-column align-items-center'>
-                    <div className='d-flex align-items-center'>
-                        <img src="pokeball.png" alt="pok&eacute;ball" width={45} />
-                        <h2 className='m-0'>Pok&eacute;mon Generator</h2>
-                    </div>
-                    <div className='d-flex flex-column align-items-center'>
-                        <p className='m-0 fw-normal text-center'>Enter any Pok&eacute;mon name or ID below to generate their stats!</p>
-                        <p className='m-0 fw-bold'>OR</p>
-                        <p className='m-0 text-center'>Just click on the generate button for a random Pok&eacute;mon!</p>
-                    </div>
+                <div className='d-flex align-items-center justify-content-center'>
+                    <img src="pokeball.png" alt="pok&eacute;ball" width={45} />
+                    <h2 className='m-0'>Pok&eacute;mon Generator</h2>
                 </div>
-                <div className='input-group my-4'>
+                <div className='input-group my-2'>
                     <input 
                         type="text"
                         className='form-control'
@@ -131,6 +126,18 @@ function App() {
                 </div>
                 <p className='text-danger text-center' hidden={!error}>Error loading Pok&eacute;mon</p>
             </div>
+
+            {/* INSTRUCTIONS */}
+            { showInstructions && (
+                <div className='d-sm-flex justify-content-center m-4 p-4 bg-light rounded shadow'>
+                    <div className='d-flex flex-column align-items-center'>
+                        <h3 className='text-decoration-underline'>Instructions:</h3>
+                        <p className='m-0 fw-normal text-center'>Enter any Pok&eacute;mon name or its ID above to generate their stats!</p>
+                        <p className='m-2 fw-bold'>OR</p>
+                        <p className='m-0 text-center'>Just click on the generate button for a random Pok&eacute;mon!</p>
+                    </div>
+                </div>
+            )}
                     
             { pokemon ? (
                 <div className='d-sm-flex justify-content-center m-4 p-4 bg-light rounded shadow'>
